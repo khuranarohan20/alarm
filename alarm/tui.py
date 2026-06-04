@@ -41,6 +41,8 @@ def _rec_label(a: Alarm) -> str:
 
 
 class AlarmCard(Widget):
+    can_focus = False
+
     DEFAULT_CSS = """
     AlarmCard {
         height: 4;
@@ -245,12 +247,15 @@ class AlarmApp(App):
 
     #list-area { height: 1fr; overflow-y: auto; padding: 1 0; }
 
-Footer {
+    #hint-bar {
+        height: 1;
         background: #161b22;
-        color: #8b949e;
         border-top: solid #21262d;
+        padding: 0 1;
+        color: #8b949e;
     }
-    Footer > .footer--key { color: #58a6ff; }
+
+    Footer { display: none; }
     """
 
     BINDINGS = [
@@ -278,6 +283,16 @@ Footer {
             yield Static("", id="topbar-next")
             yield Static("", id="topbar-daemon")
         yield ScrollableContainer(id="list-area")
+        yield Static(
+            " [bold #58a6ff]↑↓[/bold #58a6ff] navigate"
+            "  [bold #58a6ff]a[/bold #58a6ff] add"
+            "  [bold #58a6ff]^E[/bold #58a6ff] edit"
+            "  [bold #58a6ff]e[/bold #58a6ff] on/off"
+            "  [bold #58a6ff]s[/bold #58a6ff] snooze"
+            "  [bold #58a6ff]d[/bold #58a6ff] delete"
+            "  [bold #58a6ff]q[/bold #58a6ff] quit",
+            id="hint-bar",
+        )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -288,9 +303,14 @@ Footer {
     # ── Rendering ───────────────────────────────────────────────────────────
 
     def _rebuild_cards(self) -> None:
-        alarms = self.store.load()
         container = self.query_one("#list-area", ScrollableContainer)
         container.remove_children()
+        # defer mounting until removal is flushed
+        self.call_after_refresh(self._mount_cards)
+
+    def _mount_cards(self) -> None:
+        alarms = self.store.load()
+        container = self.query_one("#list-area", ScrollableContainer)
         if not alarms:
             container.mount(Static(
                 "\n\n  No alarms yet — press [bold #58a6ff]a[/bold #58a6ff] to add one",
