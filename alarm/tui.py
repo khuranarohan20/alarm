@@ -4,7 +4,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.screen import ModalScreen
-from textual.widgets import Button, Footer, Input, Label, ListItem, ListView, Select, Static
+from textual.widgets import Button, Footer, Input, Label, Select, Static
 from textual.widget import Widget
 from alarm.models import Alarm, Recurrence
 from alarm.scheduler import DaemonManager
@@ -331,7 +331,7 @@ class AlarmApp(App):
     def _update_topbar(self, alarms: list[Alarm]) -> None:
         active = [a for a in alarms if a.enabled and a.next_fire]
         if active:
-            nxt = min(active, key=lambda a: a.next_fire)
+            nxt = min(active, key=lambda a: a.next_fire or datetime.max)
             self.query_one("#topbar-next", Static).update(
                 f"[dim]next:[/dim] [bold #e6edf3]{nxt.label}[/bold #e6edf3] "
                 f"[#58a6ff]{_humanize(nxt.next_fire)}[/#58a6ff]"
