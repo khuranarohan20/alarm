@@ -245,13 +245,7 @@ class AlarmApp(App):
 
     #list-area { height: 1fr; overflow-y: auto; padding: 1 0; }
 
-    #empty-hint {
-        content-align: center middle;
-        height: 1fr;
-        color: #484f58;
-    }
-
-    Footer {
+Footer {
         background: #161b22;
         color: #8b949e;
         border-top: solid #21262d;
@@ -283,9 +277,7 @@ class AlarmApp(App):
             yield Static("⏰  alarm", id="topbar-title")
             yield Static("", id="topbar-next")
             yield Static("", id="topbar-daemon")
-        with ScrollableContainer(id="list-area"):
-            yield Static("No alarms yet — press [bold #58a6ff]a[/bold #58a6ff] to add one",
-                         id="empty-hint")
+        yield ScrollableContainer(id="list-area")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -301,8 +293,7 @@ class AlarmApp(App):
         container.remove_children()
         if not alarms:
             container.mount(Static(
-                "No alarms yet — press [bold #58a6ff]a[/bold #58a6ff] to add one",
-                id="empty-hint",
+                "\n\n  No alarms yet — press [bold #58a6ff]a[/bold #58a6ff] to add one",
             ))
             self._cursor = 0
         else:
