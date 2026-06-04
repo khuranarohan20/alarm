@@ -34,21 +34,29 @@ class AddAlarmModal(ModalScreen):
     #buttons { margin-top: 1; }
     """
 
+    def __init__(self, existing: Alarm | None = None) -> None:
+        super().__init__()
+        self._existing = existing
+
     def compose(self) -> ComposeResult:
+        a = self._existing
+        title = "Edit Alarm" if a else "Add Alarm"
+        rec_val = a.recurrence.value if a else "once"
+        days_val = ",".join(a.days) if a and a.days else ""
         with Vertical(id="dialog"):
-            yield Label("Add Alarm")
+            yield Label(title)
             yield Label("Label:")
-            yield Input(placeholder="e.g. Morning standup", id="label")
+            yield Input(value=a.label if a else "", placeholder="e.g. Morning standup", id="label")
             yield Label("Time (HH:MM 24h):")
-            yield Input(placeholder="07:30", id="time")
+            yield Input(value=a.time if a else "", placeholder="07:30", id="time")
             yield Label("Recurrence:")
-            yield Select(RECURRENCE_OPTIONS, id="recurrence", value="once")
+            yield Select(RECURRENCE_OPTIONS, id="recurrence", value=rec_val)
             yield Label("Custom days (mon,wed,fri) — only if Custom selected:")
-            yield Input(placeholder="mon,wed,fri", id="days")
+            yield Input(value=days_val, placeholder="mon,wed,fri", id="days")
             yield Label("Snooze minutes:")
-            yield Input(placeholder="5", id="snooze", value="5")
+            yield Input(value=str(a.snooze_minutes) if a else "5", placeholder="5", id="snooze")
             with Horizontal(id="buttons"):
-                yield Button("Add", variant="primary", id="add")
+                yield Button("Save" if a else "Add", variant="primary", id="add")
                 yield Button("Cancel", id="cancel")
 
     def action_cancel(self) -> None:
@@ -83,15 +91,25 @@ class AddAlarmModal(ModalScreen):
                 recurrence, days = parse_days(recurrence_val if recurrence_val != "once" else None)
         except ValueError:
             return
-        alarm = Alarm(
-            label=label,
-            time=time_val,
-            recurrence=recurrence,
-            days=days,
-            snooze_minutes=int(snooze_val) if snooze_val.isdigit() else 5,
-        )
-        alarm.next_fire = alarm.compute_next_fire()
-        self.dismiss(alarm)
+        if self._existing:
+            self._existing.label = label
+            self._existing.time = time_val
+            self._existing.recurrence = recurrence
+            self._existing.days = days
+            self._existing.snooze_minutes = int(snooze_val) if snooze_val.isdigit() else 5
+            self._existing.next_fire = self._existing.compute_next_fire()
+            self._existing.snoozed = False
+            self.dismiss(self._existing)
+        else:
+            alarm = Alarm(
+                label=label,
+                time=time_val,
+                recurrence=recurrence,
+                days=days,
+                snooze_minutes=int(snooze_val) if snooze_val.isdigit() else 5,
+            )
+            alarm.next_fire = alarm.compute_next_fire()
+            self.dismiss(alarm)
 
 
 class AlarmApp(App):
@@ -101,6 +119,7 @@ class AlarmApp(App):
     """
     BINDINGS = [
         Binding("a", "add_alarm", "Add"),
+        Binding("ctrl+e", "edit_alarm", "Edit"),
         Binding("d", "delete_alarm", "Delete"),
         Binding("e", "toggle_alarm", "Enable/Disable"),
         Binding("s", "snooze_alarm", "Snooze"),
@@ -161,6 +180,19 @@ class AlarmApp(App):
                 self.store.add(alarm)
                 self.refresh_table()
         self.push_screen(AddAlarmModal(), on_close)
+
+    def action_edit_alarm(self) -> None:
+        alarm_id = self._selected_alarm_id()
+        if not alarm_id:
+            return
+        alarm = self.store.get(alarm_id)
+        if not alarm:
+            return
+        def on_close(updated: Alarm | None) -> None:
+            if updated:
+                self.store.update(updated)
+                self.refresh_table()
+        self.push_screen(AddAlarmModal(existing=alarm), on_close)
 
     def action_delete_alarm(self) -> None:
         alarm_id = self._selected_alarm_id()
