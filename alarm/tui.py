@@ -346,9 +346,9 @@ class AlarmApp(App):
 
     BINDINGS = [
         Binding("a",      "add_alarm",    "Add",    show=False),
-        Binding("ctrl+e", "edit_alarm",   "Edit",   show=False),
+        Binding("e",      "edit_alarm",   "Edit",   show=False),
         Binding("d",      "delete_alarm", "Delete", show=False),
-        Binding("e",      "toggle_alarm", "On/Off", show=False),
+        Binding("t",      "toggle_alarm", "On/Off", show=False),
         Binding("s",      "snooze_alarm", "Snooze", show=False),
         Binding("q",      "quit",         "Quit",   show=False),
         Binding("down",   "cursor_down",  "",       show=False),
@@ -370,8 +370,8 @@ class AlarmApp(App):
         yield Static(
             " [bold #388bfd]↑↓[/bold #388bfd] navigate"
             "  [bold #388bfd]a[/bold #388bfd] add"
-            "  [bold #388bfd]^E[/bold #388bfd] edit"
-            "  [bold #388bfd]e[/bold #388bfd] on/off"
+            "  [bold #388bfd]e[/bold #388bfd] edit"
+            "  [bold #388bfd]t[/bold #388bfd] on/off"
             "  [bold #388bfd]s[/bold #388bfd] snooze"
             "  [bold #388bfd]d[/bold #388bfd] delete"
             "  [bold #388bfd]q[/bold #388bfd] quit",
