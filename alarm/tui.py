@@ -19,6 +19,8 @@ RECURRENCE_OPTIONS = [
 
 
 class AddAlarmModal(ModalScreen):
+    BINDINGS = [Binding("escape", "cancel", "Cancel")]
+
     CSS = """
     AddAlarmModal { align: center middle; }
     #dialog {
@@ -49,10 +51,19 @@ class AddAlarmModal(ModalScreen):
                 yield Button("Add", variant="primary", id="add")
                 yield Button("Cancel", id="cancel")
 
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        self._submit()
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "cancel":
             self.dismiss(None)
             return
+        self._submit()
+
+    def _submit(self) -> None:
         label = self.query_one("#label", Input).value.strip()
         time_val = self.query_one("#time", Input).value.strip()
         recurrence_val = str(self.query_one("#recurrence", Select).value)
